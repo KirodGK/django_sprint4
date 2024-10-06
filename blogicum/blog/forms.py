@@ -1,6 +1,6 @@
 from django import forms
 from .constant import MAX_LENGHT_TEXT
-from .models import Comments, Post
+from .models import Comments, Post, User
 
 
 # class PostForm(forms.Form):
@@ -20,6 +20,7 @@ class PostForm(forms.ModelForm):
                 'location',
                 'pub_date',
                 'text',
+                'is_published',
                 'image',
                 )
     
@@ -37,3 +38,11 @@ class CommentForm(forms.ModelForm):
     class Meta:
         model = Comments
         fields = ('text',) 
+        
+class ProfilForm(forms.ModelForm):
+    
+    class Meta:
+        model = User
+        fields = (
+                  'last_name',
+                  'first_name')
