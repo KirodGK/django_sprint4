@@ -3,7 +3,14 @@ from django.db import models
 from django.db.models import Count
 from django.forms import BaseModelForm
 from django.http import HttpRequest, HttpResponse
-from django.views.generic import ListView, CreateView, DetailView, DeleteView, UpdateView
+from django.views.generic import (
+    ListView,
+    CreateView,
+    DetailView,
+    DeleteView,
+    UpdateView,
+    FormView,
+)
 from django.urls import reverse_lazy
 
 from django.shortcuts import get_object_or_404, render, redirect
@@ -253,9 +260,9 @@ class AddCommentView(LoginRequiredMixin, CreateView):
     posts = None
     form_class = CommentForm
     model = Comments
-    template_name = 'blog/comment.html'
-    pk_url_kwarg = 'commet_id'
-    
+    template_name = "blog/comment.html"
+    pk_url_kwarg = "commet_id"
+
     def dispatch(self, request, *args, **kwargs):
         self.posts = get_object_or_404(Post, pk=kwargs['post_id'])
         return super().dispatch(request, *args, **kwargs)
