@@ -1,5 +1,4 @@
 from django import forms
-from .constant import MAX_LENGHT_TEXT
 from .models import Comments, Post, User
 
 
@@ -11,14 +10,14 @@ class PostForm(forms.ModelForm):
 
         model = Post
         fields = (
-                'title',
-                'category',
-                'location',
-                'pub_date',
-                'text',
-                'is_published',
-                'image',
-                )
+            'title',
+            'category',
+            'location',
+            'pub_date',
+            'text',
+            'is_published',
+            'image',
+        )
 
 
 class CommentForm(forms.ModelForm):
@@ -39,5 +38,5 @@ class ProfilForm(forms.ModelForm):
 
         model = User
         fields = (
-                  'last_name',
-                  'first_name')
+            'last_name',
+            'first_name')
