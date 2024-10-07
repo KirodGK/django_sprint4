@@ -1,4 +1,5 @@
 from datetime import datetime
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import models
 from django.db.models import Count
 from .models import User
@@ -16,14 +17,11 @@ from django.shortcuts import get_object_or_404, redirect
 from django.core.paginator import Paginator
 from blog.models import Category, Post, Comments
 
-from .constant import POST_OUTPUT_LIM
 from .forms import PostForm, CommentForm, ProfilForm
-
-from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 class ProfileListView(ListView):
-    """CBV класс для отоброжанеия профиля"""
+    """CBV класс для отоброжанеия профиля."""
 
     template_name = "blog/profile.html"
 
@@ -50,7 +48,7 @@ class ProfileListView(ListView):
 
 
 class ProfileUpdateView(LoginRequiredMixin, FormView):
-    """CBV класс для редактирования профиля"""
+    """CBV класс для редактирования профиля."""
 
     template_name = "blog/user.html"
     form_class = ProfilForm
@@ -68,10 +66,6 @@ class ProfileUpdateView(LoginRequiredMixin, FormView):
         return reverse_lazy(
             "blog:profile", kwargs={"username": self.request.user.username}
         )
-
-
-def edit_profile():
-    pass
 
 
 class PostQuerySet(models.QuerySet):
@@ -96,7 +90,7 @@ class PostQuerySet(models.QuerySet):
 
 
 class PostListView(ListView):
-    """CBV класс для отоброжанеия списка постов"""
+    """CBV класс для отоброжанеия списка постов."""
     model = Post
     template_name = "blog/index.html"
     paginate_by = 10
@@ -106,8 +100,7 @@ class PostListView(ListView):
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
-
-    """CBV класс для создания постов"""
+    """CBV класс для создания постов."""
 
     model = Post
     template_name = "blog/create.html"
@@ -127,7 +120,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 
 class PostUpdateView(LoginRequiredMixin, UpdateView):
-    """CBV класс для редактирования постов"""
+    """CBV класс для редактирования постов."""
 
     model = Post
     template_name = "blog/create.html"
@@ -153,7 +146,7 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
 
 
 class PostDeleteView(LoginRequiredMixin, DeleteView):
-    """CBV класс для удаления постов"""
+    """CBV класс для удаления постов."""
 
     model = Post
     template_name = "blog/create.html"
@@ -175,7 +168,7 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
 
 
 class PostDetailView(DetailView):
-    """CBV класс для отображения подробной информации поста"""
+    """CBV класс для отображения подробной информации поста."""
 
     model = Post
     template_name = "blog/detail.html"
@@ -188,7 +181,11 @@ class PostDetailView(DetailView):
         return context
 
     def get_queryset(self):
-        queryset = Post.objects.select_related("author", "category", "location").filter(
+        queryset = Post.objects.select_related(
+            "author",
+            "category",
+            "location"
+        ).filter(
             id=self.kwargs.get("post_id")
         )
         user = queryset.values_list("author__username", flat=True).first()
@@ -204,7 +201,7 @@ class PostDetailView(DetailView):
 
 
 class CategoryListView(ListView):
-    """CBV класс для отображения постов по категории"""
+    """CBV класс для отображения постов по категории."""
 
     template_name = "blog/category.html"
     model = Category
@@ -232,7 +229,7 @@ class CategoryListView(ListView):
 
 
 class AddCommentView(LoginRequiredMixin, CreateView):
-    """CBV класс для добавления комментария"""
+    """CBV класс для добавления комментария."""
 
     posts = None
     form_class = CommentForm
@@ -254,7 +251,7 @@ class AddCommentView(LoginRequiredMixin, CreateView):
 
 
 class CommentUpdateView(LoginRequiredMixin, UpdateView):
-    """CBV класс для редактирования постов"""
+    """CBV класс для редактирования постов."""
 
     model = Comments
     template_name = "blog/comment.html"
@@ -286,7 +283,7 @@ class CommentUpdateView(LoginRequiredMixin, UpdateView):
 
 
 class DeleteCommentView(LoginRequiredMixin, DeleteView):
-    """CBV класс для удаления комменатрия"""
+    """CBV класс для удаления комменатрия."""
 
     model = Comments
     template_name = "blog/comment.html"

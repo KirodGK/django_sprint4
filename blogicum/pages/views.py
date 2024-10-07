@@ -3,18 +3,27 @@ from django.shortcuts import render
 
 
 class AboutTemplateView(TemplateView):
-    template_name = 'pages/about.html'
-    
-class RulestTemplateView(TemplateView):
-    template_name = 'pages/rules.html'
-    
+    """Класс для вывода CBV страницы о проекте."""
 
-def csrf_failure(request, reason=''):
-    return render(request, 'pages/403csrf.html', status=403)
+    template_name = 'pages/about.html'
+
+
+class RulestTemplateView(TemplateView):
+    """Класс для вывода CBV страницы с правилами."""
+
+    template_name = 'pages/rules.html'
+
+
+def csrf_failure(request, reason=""):
+    """Функция вывода кастомной страницы ошибки 403."""
+    return render(request, "pages/403csrf.html", status=403)
+
 
 def page_not_found(request, exception):
-    return render(request, 'pages/404.html', status=404)
+    """Функция вывода кастомной страницы ошибки 404."""
+    return render(request, "pages/404.html", status=404)
+
 
 def internal_server_error500(request):
-    return render(request, 'pages/500.html', status=500)
-
+    """Функция вывода кастомной страницы ошибки 500."""
+    return render(request, "pages/500.html", status=500)

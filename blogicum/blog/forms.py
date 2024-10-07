@@ -3,16 +3,12 @@ from .constant import MAX_LENGHT_TEXT
 from .models import Comments, Post, User
 
 
-# class PostForm(forms.Form):
-#     title = forms.CharField(label = 'Название', max_length=MAX_LENGHT_TEXT)
-#     # text = forms.TextField('Текст')
-#     description = forms.CharField(label = 'Описание', widget=forms.Textarea)
-#     price = forms.IntegerField(label = 'Цена', help_text = 'Рекомендованная розничная цена',min_value = 10, max_value = 100)
-#     comment = forms.CharField(label = 'Комментарий',required=False, widget=forms.Textarea)
-
 class PostForm(forms.ModelForm):
-    
+    """Класс для формирования CBV формы поста."""
+
     class Meta:
+        """Класс для формирования CBV формы поста, вывод полей."""
+
         model = Post
         fields = (
                 'title',
@@ -23,25 +19,24 @@ class PostForm(forms.ModelForm):
                 'is_published',
                 'image',
                 )
-    
-        
-# class CommentForm(forms.Form):
-#     # title = forms.CharField(label = 'Название', max_length=MAX_LENGHT_TEXT)
-#     # author = forms.CharField(label ='Текст')
-#     text = forms.CharField(label ='Текст')
-#     # description = forms.CharField(label = 'Описание', widget=forms.Textarea)
-#     # price = forms.IntegerField(label = 'Цена', help_text = 'Рекомендованная розничная цена',min_value = 10, max_value = 100)
-#     # comment = forms.CharField(label = 'Комментарий',required=False, widget=forms.Textarea)   
+
 
 class CommentForm(forms.ModelForm):
-    
+    """Класс для формирования CBV формы комментария."""
+
     class Meta:
+        """Класс для формирования CBV формы комментария, вывод полей."""
+
         model = Comments
-        fields = ('text',) 
-        
+        fields = ('text',)
+
+
 class ProfilForm(forms.ModelForm):
-    
+    """Класс для формирования CBV формы профиля."""
+
     class Meta:
+        """Класс для формирования CBV формы профиля, вывод полей."""
+
         model = User
         fields = (
                   'last_name',
