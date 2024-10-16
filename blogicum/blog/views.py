@@ -253,11 +253,11 @@ class CategoryListView(ListView):
         """функция выборки постов по определйнной категории."""
         return Post.objects.select_related("author", "category", "location"
                                            ).filter(
-                            is_published=True,
-                            category__is_published=True,
-                            pub_date__lt=datetime.now(),
-                            category__slug=self.kwargs.get("category_slug"),
-                        ).order_by("-pub_date")
+            is_published=True,
+            category__is_published=True,
+            pub_date__lt=datetime.now(),
+            category__slug=self.kwargs.get("category_slug"),
+        ).order_by("-pub_date")
 
 
 class AddCommentView(LoginRequiredMixin, CreateView):
