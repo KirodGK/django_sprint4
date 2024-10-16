@@ -43,7 +43,7 @@ class ProfileListView(ListView):
     """CBV класс для отоброжанеия профиля."""
 
     template_name = "blog/profile.html"
-    
+
     def get_queryset(self):
         """фунция выборпи постов с сортировкой по автору."""
         self.author = get_object_or_404(User, username=self.kwargs["username"])
@@ -74,8 +74,8 @@ class ProfileSuccessMixin:
         return reverse(
             "blog:profile", kwargs={"username": self.request.user.username}
         )
-        
-        
+
+
 class ProfileUpdateView(LoginRequiredMixin, ProfileSuccessMixin, FormView):
     """CBV класс для редактирования профиля."""
 
@@ -251,11 +251,8 @@ class CategoryListView(ListView):
 
     def get_queryset(self):
         """функция выборки постов по определйнной категории."""
-        return Post.objects.select_related(
-                    "author",
-                    "category",
-                    "location"
-                    ).filter(
+        return Post.objects.select_related("author", "category", "location"
+                                           ).filter(
                             is_published=True,
                             category__is_published=True,
                             pub_date__lt=datetime.now(),
