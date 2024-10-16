@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
-from .constant import MAX_LENGHT_TEXT
+from .constant import MAX_LENGHT_TEXT, MAX_LENGHT_COMMENT
 
 User = get_user_model()
 
@@ -97,4 +97,4 @@ class Comments(models.Model):
 
     def __str__(self) -> str:
         """Метод переопределения вывода."""
-        return self.text[:250]
+        return self.text[:MAX_LENGHT_COMMENT]

@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import models
 from django.db.models import Count
@@ -11,20 +12,38 @@ from django.views.generic import (
     UpdateView,
     FormView,
 )
-from django.urls import reverse_lazy, reverse
-
+from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect
 from django.core.paginator import Paginator
+
 from blog.models import Category, Post, Comments
 
 from .forms import PostForm, CommentForm, ProfilForm
+
+from .constant import COUNT_POSTS_ON_FRAME
+
+
+class CommentSyccessMixin:
+    """Миксин удачного выполнения."""
+
+    def get_success_url(self):
+        """функция перенаправления при удачном выполнении."""
+        return reverse(
+            "blog:post_detail", kwargs={"post_id": self.kwargs["post_id"]})
+
+
+def page_counter(self, model):
+    """Функция подсчета страниц."""
+    paginator = Paginator(model, COUNT_POSTS_ON_FRAME)
+    page_number = self.request.GET.get("page")
+    return paginator.get_page(page_number)
 
 
 class ProfileListView(ListView):
     """CBV класс для отоброжанеия профиля."""
 
     template_name = "blog/profile.html"
-
+    
     def get_queryset(self):
         """фунция выборпи постов с сортировкой по автору."""
         self.author = get_object_or_404(User, username=self.kwargs["username"])
@@ -43,13 +62,21 @@ class ProfileListView(ListView):
             .annotate(comment_count=Count("comments"))
             .order_by("-pub_date")
         )
-        paginator = Paginator(model, 10)
-        page_number = self.request.GET.get("page")
-        context["page_obj"] = paginator.get_page(page_number)
+        context["page_obj"] = page_counter(self, model)
         return context
 
 
-class ProfileUpdateView(LoginRequiredMixin, FormView):
+class ProfileSuccessMixin:
+    """Миксин успешного выполнения."""
+
+    def get_success_url(self):
+        """функция перенаправления при удачном выполнении."""
+        return reverse(
+            "blog:profile", kwargs={"username": self.request.user.username}
+        )
+        
+        
+class ProfileUpdateView(LoginRequiredMixin, ProfileSuccessMixin, FormView):
     """CBV класс для редактирования профиля."""
 
     template_name = "blog/user.html"
@@ -63,12 +90,6 @@ class ProfileUpdateView(LoginRequiredMixin, FormView):
 
         form.save()
         return super().form_valid(form)
-
-    def get_success_url(self):
-        """функция перенаправления при удачном выполнении."""
-        return reverse_lazy(
-            "blog:profile", kwargs={"username": self.request.user.username}
-        )
 
 
 class PostQuerySet(models.QuerySet):
@@ -101,7 +122,7 @@ class PostListView(ListView):
 
     model = Post
     template_name = "blog/index.html"
-    paginate_by = 10
+    paginate_by = COUNT_POSTS_ON_FRAME
 
     def get_queryset(self):
         """функция выборки актуальных постов."""
@@ -126,7 +147,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         """функция перенаправления при удачном выполнении."""
-        return reverse_lazy(
+        return reverse(
             "blog:profile", kwargs={"username": self.request.user.username}
         )
 
@@ -160,7 +181,7 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
         return reverse("blog:post_detail", kwargs={"post_id": self.object.id})
 
 
-class PostDeleteView(LoginRequiredMixin, DeleteView):
+class PostDeleteView(LoginRequiredMixin, ProfileSuccessMixin, DeleteView):
     """CBV класс для удаления постов."""
 
     model = Post
@@ -176,12 +197,6 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
         if post.author != request.user:
             return redirect("blog:post_detail", post_id=self.kwargs["post_id"])
         return super().dispatch(request, *args, **kwargs)
-
-    def get_success_url(self):
-        """функция перенаправления при удачном выполнении."""
-        return reverse_lazy(
-            "blog:profile", kwargs={"username": self.request.user.username}
-        )
 
 
 class PostDetailView(DetailView):
@@ -224,7 +239,7 @@ class CategoryListView(ListView):
 
     template_name = "blog/category.html"
     model = Category
-    paginate_by = 10
+    paginate_by = COUNT_POSTS_ON_FRAME
 
     def get_context_data(self, **kwargs):
         """функция модификации контектса."""
@@ -236,17 +251,16 @@ class CategoryListView(ListView):
 
     def get_queryset(self):
         """функция выборки постов по определйнной категории."""
-        queryset = (
-            Post.objects.select_related("author", "category", "location")
-            .filter(
-                is_published=True,
-                category__is_published=True,
-                pub_date__lt=datetime.now(),
-                category__slug=self.kwargs.get("category_slug"),
-            )
-            .order_by("-pub_date")
-        )
-        return queryset
+        return Post.objects.select_related(
+                    "author",
+                    "category",
+                    "location"
+                    ).filter(
+                            is_published=True,
+                            category__is_published=True,
+                            pub_date__lt=datetime.now(),
+                            category__slug=self.kwargs.get("category_slug"),
+                        ).order_by("-pub_date")
 
 
 class AddCommentView(LoginRequiredMixin, CreateView):
@@ -274,7 +288,7 @@ class AddCommentView(LoginRequiredMixin, CreateView):
         return reverse("blog:post_detail", kwargs={"post_id": self.posts.pk})
 
 
-class CommentUpdateView(LoginRequiredMixin, UpdateView):
+class CommentUpdateView(LoginRequiredMixin, CommentSyccessMixin, UpdateView):
     """CBV класс для редактирования постов."""
 
     model = Comments
@@ -302,14 +316,8 @@ class CommentUpdateView(LoginRequiredMixin, UpdateView):
         )
         return context
 
-    def get_success_url(self):
-        """функция перенаправления при удачном выполнении."""
-        return reverse_lazy(
-            "blog:post_detail", kwargs={"post_id": self.kwargs["post_id"]}
-        )
 
-
-class DeleteCommentView(LoginRequiredMixin, DeleteView):
+class DeleteCommentView(LoginRequiredMixin, CommentSyccessMixin, DeleteView):
     """CBV класс для удаления комменатрия."""
 
     model = Comments
@@ -325,9 +333,3 @@ class DeleteCommentView(LoginRequiredMixin, DeleteView):
         if comment.author != request.user:
             return redirect("blog:post_detail", post_id=self.kwargs["post_id"])
         return super().dispatch(request, *args, **kwargs)
-
-    def get_success_url(self):
-        """функция перенаправления при удачном выполнении."""
-        return reverse_lazy(
-            "blog:post_detail", kwargs={"post_id": self.kwargs["post_id"]}
-        )
