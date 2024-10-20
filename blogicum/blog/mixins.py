@@ -14,7 +14,7 @@ class ProfileSuccessMixin:
     """Миксин успешного выполнения для профиля."""
 
     def get_success_url(self):
-        """функция перенаправления при удачном выполнении."""
+        """Перенаправление при удачном выполнении."""
         return reverse(
             "blog:profile", kwargs={"username": self.request.user.username}
         )

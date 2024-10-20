@@ -1,9 +1,7 @@
 from datetime import datetime
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import models
 from django.db.models import Count
-from .models import User
 from django.views.generic import (
     ListView,
     CreateView,
@@ -14,21 +12,15 @@ from django.views.generic import (
 )
 from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect
-from django.core.paginator import Paginator
 
-from blog.models import Category, Post, Comments
 
-from .forms import PostForm, CommentForm, ProfilForm
+from blog.models import Category, Comments, Post
 
 from .constant import COUNT_POSTS_ON_FRAME
+from .forms import CommentForm, PostForm, ProfilForm
 from .mixins import CommentSuccessMixin, ProfileSuccessMixin
-
-
-def page_counter(self, model):
-    """Функция подсчета страниц."""
-    paginator = Paginator(model, COUNT_POSTS_ON_FRAME)
-    page_number = self.request.GET.get("page")
-    return paginator.get_page(page_number)
+from .models import User
+from .utils import page_counter, PostQuerySet
 
 
 class ProfileListView(ListView):
@@ -72,31 +64,6 @@ class ProfileUpdateView(LoginRequiredMixin, ProfileSuccessMixin, FormView):
 
         form.save()
         return super().form_valid(form)
-
-
-class PostQuerySet(models.QuerySet):
-    """Выборка данных из моделей."""
-
-    def with_related_data(self):
-        """Объединения запроса у БД."""
-        return self.select_related(
-            "author",
-            "category",
-            "location",
-            "comments"
-        )
-
-    def published(self):
-        """Фильтр для выборки по актуальности поста."""
-        return self.filter(
-            is_published=True,
-            category__is_published=True,
-            pub_date__lt=datetime.now()
-        )
-
-    def annotates(self):
-        """Метод для подсчёта комментария к посту."""
-        return self.annotate(comment_count=Count("comments"))
 
 
 class PostListView(ListView):
@@ -163,6 +130,16 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
         return reverse("blog:post_detail", kwargs={"post_id": self.object.id})
 
 
+class ProfileSuccessMixin:
+    """Миксин успешного выполнения для профиля."""
+
+    def get_success_url(self):
+        """функция перенаправления при удачном выполнении."""
+        return reverse(
+            "blog:profile", kwargs={"username": self.request.user.username}
+        )
+
+
 class PostDeleteView(LoginRequiredMixin, ProfileSuccessMixin, DeleteView):
     """CBV класс для удаления постов."""
 
@@ -197,13 +174,10 @@ class PostDetailView(DetailView):
 
     def get_queryset(self):
         """Выборки постов по его ID."""
-        queryset = Post.objects.select_related(
-            "author",
-            "category",
-            "location"
-        ).filter(
+        queryset = PostQuerySet(Post).with_related_data_no_comments().filter(
             id=self.kwargs.get("post_id")
         )
+
         user = queryset.values_list("author__username", flat=True).first()
 
         if not self.request.user.username == user:
@@ -233,13 +207,9 @@ class CategoryListView(ListView):
 
     def get_queryset(self):
         """Выборки постов по определённой категории."""
-        return Post.objects.select_related("author", "category", "location"
-                                           ).filter(
-            is_published=True,
-            category__is_published=True,
-            pub_date__lt=datetime.now(),
-            category__slug=self.kwargs.get("category_slug"),
-        ).order_by("-pub_date")
+        return PostQuerySet(Post).with_related_data_no_comments(
+        ).published().filter(category__slug=self.kwargs.get("category_slug")
+                             ).order_by("-pub_date")
 
 
 class AddCommentView(LoginRequiredMixin, CreateView):
